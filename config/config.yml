@@ -1,0 +1,16 @@
+data:
+  batch_size: 256
+  num_workers: 0
+  image_size: 28
+
+path:
+  raw_path: ./data/raw.csv
+  blur_path: ./data/blur.csv
+  eval_path: ./data/eval.csv
+  ckpt_path: ./ckpt/best_epoch.pth
+  save_path: ./result
+
+train:
+  optimizer: Adam
+  epoch: 200
+  lr: 0.0001
