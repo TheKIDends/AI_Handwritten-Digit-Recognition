@@ -17,7 +17,7 @@ def main():
 
     config = dict_to_namespace(config)  # Convert dictionary to Namespace object
 
-    runner = RandomNetRunner(config, logger)
+    runner = LeNet5Runner(config, logger)
     runner.train()
     runner.test()
 

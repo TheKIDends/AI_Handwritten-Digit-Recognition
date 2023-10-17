@@ -51,7 +51,9 @@ class LeNet5Runner:
         # load checkpoint
         if 'ckpt_path' in config.path:
             if config.path.ckpt_path is not None:
-                self.model.load_state_dict(torch.load(config.path.ckpt_path))
+                last_state = torch.load(config.path.ckpt_path)
+                self.global_step = last_state['last_step']
+                self.model.load_state_dict(last_state['last_model'])
 
     def get_optimizer(self, optim):
         if str(optim) == "Adam":
@@ -78,12 +80,14 @@ class LeNet5Runner:
         raw_data = pd.read_csv(self.config.path.raw_path)
         blur_data = pd.read_csv(self.config.path.blur_path)
         gaussian_data = pd.read_csv(self.config.path.gaussian_path)
+        random_transform_data = pd.read_csv(self.config.path.random_transform_path)
 
         eval_data = pd.read_csv(self.config.path.eval_path)
 
-        # mix raw_data and blur_data
+        # mix data
         tot_data = pd.concat([raw_data, blur_data], axis=0)
         tot_data = pd.concat([tot_data, gaussian_data], axis=0)
+        tot_data = pd.concat([tot_data, random_transform_data], axis=0)
         tot_data = tot_data.sample(frac=1).reset_index(drop=True)  # shuffle tot_data
 
         print(tot_data.shape)
@@ -125,7 +129,7 @@ class LeNet5Runner:
 
     def train(self):
         print('Start training on device {}'.format(device))
-        self.global_step = 0
+
         self.model = self.model.to(device)
         best_val_loss = 1e9
 
@@ -177,7 +181,12 @@ class LeNet5Runner:
                 if best_val_loss > avg_loss:
                     best_val_loss = avg_loss
                     best_path = './ckpt/best_epoch.pth'
-                    torch.save(self.model.state_dict(), best_path)
+
+                    cur_state = {
+                        'last_step': self.global_step,
+                        'last_model': self.model.state_dict()
+                    }
+                    torch.save(cur_state, best_path)
 
     def test(self):
         print('Start testing on device {}'.format(device))
